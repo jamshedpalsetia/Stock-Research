@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Company snapshot</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #efe8d8;
+      --paper: #fbf7ee;
+      --ink: #1c1914;
+      --muted: #6e675c;
+      --line: #ddd2bc;
+      --accent: #0e6b4f;
+      --danger: #8d2e2a;
+      --danger-soft: #f8e8e4;
+      --pending: #8a8174;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 240px),
+        var(--bg);
+      color: var(--ink);
+      font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+      line-height: 1.45;
+    }
+
+    .wrap {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+
+    h1 {
+      font-size: 2.15rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      margin: 0 0 0.35rem;
+    }
+
+    .lede {
+      margin: 0;
+      color: var(--muted);
+      max-width: 36rem;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.6rem;
+      margin: 1.4rem 0 0.4rem;
+      align-items: end;
+    }
+
+    label {
+      grid-column: 1 / -1;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input {
+      font: inherit;
+      font-size: 1.05rem;
+      padding: 0.7rem 0.8rem;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      border-radius: 2px;
+      width: 100%;
+    }
+
+    input:focus-visible,
+    button:focus-visible,
+    a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    button {
+      font: inherit;
+      background: var(--ink);
+      color: var(--paper);
+      border: 0;
+      padding: 0.7rem 1rem;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: progress;
+    }
+
+    .hint,
+    .status {
+      color: var(--muted);
+      margin: 0.35rem 0 0;
+      min-height: 1.3em;
+    }
+
+    .banner {
+      background: var(--danger-soft);
+      color: var(--danger);
+      padding: 0.7rem 0.85rem;
+      margin-top: 0.8rem;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      padding: 1rem 1.1rem 1.15rem;
+      margin-top: 0.9rem;
+    }
+
+    .card[data-state="pending"] { border-left-color: var(--pending); }
+    .card[data-state="error"] {
+      border-left-color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    h2 {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      margin: 0 0 0.75rem;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem 1rem;
+      margin: 0 0 0.4rem;
+    }
+
+    dt {
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    dd {
+      margin: 0.12rem 0 0;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 1.08rem;
+    }
+
+    .quote-error,
+    .run-error {
+      margin: 0;
+      color: var(--danger);
+    }
+
+    .news {
+      list-style: none;
+      padding: 0;
+      margin: 0.8rem 0 0;
+    }
+
+    .news li {
+      padding: 0.45rem 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .news a { color: var(--ink); }
+
+    .published,
+    .empty {
+      display: block;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .filings {
+      margin-top: 0.9rem;
+      border-top: 1px solid var(--line);
+      padding-top: 0.7rem;
+    }
+
+    .filings > h3 {
+      margin: 0 0 0.35rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .filings details {
+      border-top: 1px solid var(--line);
+      padding: 0.45rem 0;
+    }
+
+    .filings summary {
+      cursor: pointer;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.82rem;
+    }
+
+    .filings p {
+      margin: 0.55rem 0 0;
+      font-size: 0.92rem;
+    }
+
+    .summary {
+      white-space: pre-wrap;
+      margin: 0.9rem 0 0;
+    }
+
+    .tag {
+      color: var(--accent);
+      font-variant: small-caps;
+      letter-spacing: 0.03em;
+      font-size: 0.92em;
+    }
+
+    .pending {
+      color: var(--pending);
+      font-style: italic;
+      margin: 0;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .card[data-state="pending"] .pending {
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+    }
+
+    @keyframes pulse {
+      50% { opacity: 0.45; }
+    }
+
+    @media (max-width: 560px) {
+      dl { grid-template-columns: 1fr; }
+      form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>Company snapshot</h1>
+      <p class="lede">A quote, recent headlines, filing evidence, and a short summary. Every claim keeps its quote, news, or filing source tag.</p>
+    </header>
+
+    <form id="form">
+      <label for="tickers">Tickers</label>
+      <input id="tickers" name="tickers" type="text" autocomplete="off" spellcheck="false" autocapitalize="characters" placeholder="AAPL, NVDA" required>
+      <button id="submit" type="submit">Get snapshots</button>
+    </form>
+    <p class="hint">Separate tickers with commas or spaces. Up to 10. Each card fills in when that ticker finishes.</p>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <div id="banner"></div>
+    <div id="cards"></div>
+  </main>
+  <noscript><p>This page needs JavaScript to read the snapshot stream.</p></noscript>
+
+  <script>
+    const form = document.getElementById("form");
+    const input = document.getElementById("tickers");
+    const submitButton = document.getElementById("submit");
+    const statusNode = document.getElementById("status");
+    const bannerNode = document.getElementById("banner");
+    const cardsNode = document.getElementById("cards");
+
+    const FIGURES = [
+      ["Price", "current_price"],
+      ["Market cap", "market_cap"],
+      ["Trailing P/E", "trailing_pe"],
+      ["52-week high", "fifty_two_week_high"],
+      ["52-week low", "fifty_two_week_low"],
+    ];
+
+    let runId = 0;
+    let controller = null;
+
+    function parseTickers(raw) {
+      return raw.split(/[\s,]+/).map((item) => item.trim().toUpperCase()).filter(Boolean);
+    }
+
+    function setStatus(text) {
+      statusNode.textContent = text;
+    }
+
+    function setBanner(text) {
+      bannerNode.replaceChildren();
+      if (!text) return;
+      const p = document.createElement("p");
+      p.className = "banner";
+      p.textContent = text;
+      bannerNode.appendChild(p);
+    }
+
+    function safeUrl(value) {
+      try {
+        const url = new URL(value);
+        if (url.protocol === "http:" || url.protocol === "https:") return url.href;
+      } catch (err) {
+        return "";
+      }
+      return "";
+    }
+
+    function pendingCard(ticker) {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.dataset.state = "pending";
+      card.dataset.ticker = ticker;
+      const title = document.createElement("h2");
+      title.textContent = ticker;
+      const waiting = document.createElement("p");
+      waiting.className = "pending";
+      waiting.textContent = "Waiting for this snapshot…";
+      card.append(title, waiting);
+      return card;
+    }
+
+    function appendSummary(parent, text) {
+      const paragraph = document.createElement("p");
+      paragraph.className = "summary";
+      const pattern = /\(source: (quote|news|filing)\)/g;
+      let last = 0;
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        if (match.index > last) {
+          paragraph.appendChild(document.createTextNode(text.slice(last, match.index)));
+        }
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = match[0];
+        paragraph.appendChild(tag);
+        last = match.index + match[0].length;
+      }
+      if (last < text.length) {
+        paragraph.appendChild(document.createTextNode(text.slice(last)));
+      }
+      parent.appendChild(paragraph);
+    }
+
+    function appendNews(parent, items) {
+      const list = document.createElement("ul");
+      list.className = "news";
+      const rows = Array.isArray(items) ? items : [];
+      if (!rows.length) {
+        const item = document.createElement("li");
+        const empty = document.createElement("span");
+        empty.className = "empty";
+        empty.textContent = "No headlines.";
+        item.appendChild(empty);
+        list.appendChild(item);
+        parent.appendChild(list);
+        return;
+      }
+      for (const row of rows) {
+        const item = document.createElement("li");
+        const headline = row && row.headline ? String(row.headline) : "";
+        const link = row && row.link ? safeUrl(String(row.link)) : "";
+        if (headline && link) {
+          const anchor = document.createElement("a");
+          anchor.href = link;
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+          anchor.textContent = headline;
+          item.appendChild(anchor);
+        } else if (headline) {
+          item.appendChild(document.createTextNode(headline));
+        } else if (row && row.error) {
+          const error = document.createElement("span");
+          error.className = "quote-error";
+          error.textContent = String(row.error);
+          item.appendChild(error);
+        }
+        if (row && row.published) {
+          const time = document.createElement("span");
+          time.className = "published";
+          time.textContent = String(row.published);
+          item.appendChild(time);
+        }
+        list.appendChild(item);
+      }
+      parent.appendChild(list);
+    }
+
+    function appendFilings(parent, items) {
+      const rows = Array.isArray(items) ? items.filter((item) => item && item.text) : [];
+      if (!rows.length) return;
+
+      const section = document.createElement("section");
+      section.className = "filings";
+      const heading = document.createElement("h3");
+      heading.textContent = "Filing evidence (" + rows.length + ")";
+      section.appendChild(heading);
+
+      for (const row of rows) {
+        const details = document.createElement("details");
+        const label = document.createElement("summary");
+        const source = row.source_file ? String(row.source_file) : "SEC filing";
+        const chunk = row.chunk_id === null || row.chunk_id === undefined
+          ? ""
+          : " · chunk " + String(row.chunk_id);
+        label.textContent = source + chunk;
+        const excerpt = document.createElement("p");
+        excerpt.textContent = String(row.text);
+        details.append(label, excerpt);
+        section.appendChild(details);
+      }
+      parent.appendChild(section);
+    }
+
+    function fillSnapshot(card, data) {
+      card.dataset.state = "ready";
+      card.replaceChildren();
+      const title = document.createElement("h2");
+      title.textContent = data.ticker || card.dataset.ticker || "";
+      card.appendChild(title);
+
+      const quote = data.quote || {};
+      if (quote.error) {
+        const error = document.createElement("p");
+        error.className = "quote-error";
+        error.textContent = String(quote.error);
+        card.appendChild(error);
+      } else {
+        const display = data.quote_display || {};
+        const list = document.createElement("dl");
+        let shown = 0;
+        for (const [label, key] of FIGURES) {
+          const value = display[key];
+          if (!value) continue;
+          shown += 1;
+          const row = document.createElement("div");
+          const term = document.createElement("dt");
+          term.textContent = label;
+          const detail = document.createElement("dd");
+          detail.textContent = String(value);
+          row.append(term, detail);
+          list.appendChild(row);
+        }
+        if (shown) card.appendChild(list);
+      }
+
+      appendNews(card, data.news);
+      appendFilings(card, data.filings);
+      appendSummary(card, data.summary || "");
+    }
+
+    function fillRunError(card, data) {
+      card.dataset.state = "error";
+      card.replaceChildren();
+      const title = document.createElement("h2");
+      title.textContent = (data && data.ticker) || card.dataset.ticker || "";
+      const lead = document.createElement("p");
+      lead.className = "run-error";
+      lead.textContent = "This run failed.";
+      const detail = document.createElement("p");
+      detail.textContent = data && data.error ? String(data.error) : "Unknown error.";
+      card.append(title, lead, detail);
+    }
+
+    function takePending(ticker) {
+      const pending = cardsNode.querySelectorAll('.card[data-state="pending"]');
+      for (const card of pending) {
+        if (!ticker || card.dataset.ticker === ticker) return card;
+      }
+      return pending[0] || null;
+    }
+
+    function parseFrames(buffer) {
+      const frames = [];
+      let rest = buffer;
+      let splitAt = rest.indexOf("\n\n");
+      while (splitAt !== -1) {
+        const raw = rest.slice(0, splitAt);
+        rest = rest.slice(splitAt + 2);
+        let eventName = "message";
+        const dataLines = [];
+        for (const line of raw.split("\n")) {
+          if (!line || line.startsWith(":")) continue;
+          if (line.startsWith("event:")) eventName = line.slice(6).trim();
+          else if (line.startsWith("data:")) dataLines.push(line.slice(5).replace(/^ /, ""));
+        }
+        if (dataLines.length) {
+          frames.push({ event: eventName, data: JSON.parse(dataLines.join("\n")) });
+        }
+        splitAt = rest.indexOf("\n\n");
+      }
+      return { frames, rest };
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const tickers = parseTickers(input.value);
+      if (!tickers.length) {
+        setBanner("Enter at least one ticker.");
+        setStatus("");
+        return;
+      }
+      if (tickers.length > 10) {
+        setBanner("At most 10 tickers.");
+        setStatus("");
+        return;
+      }
+
+      const id = ++runId;
+      if (controller) controller.abort();
+      controller = new AbortController();
+      setBanner("");
+      cardsNode.replaceChildren();
+      submitButton.disabled = true;
+      setStatus("Starting " + tickers.join(", ") + ".");
+
+      try {
+        const response = await fetch("/snapshots", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+          },
+          body: JSON.stringify({ tickers }),
+          signal: controller.signal,
+        });
+        if (id !== runId) return;
+        if (!response.ok) {
+          let message = "Request failed (" + response.status + ").";
+          try {
+            const body = await response.json();
+            if (typeof body.detail === "string") message = body.detail;
+          } catch (err) {
+            /* keep the status message */
+          }
+          throw new Error(message);
+        }
+
+        for (const ticker of tickers) cardsNode.appendChild(pendingCard(ticker));
+        setStatus("Running. Cards fill in as each ticker finishes.");
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let finished = 0;
+        while (true) {
+          const step = await reader.read();
+          if (id !== runId) return;
+          if (step.done) break;
+          buffer += decoder.decode(step.value, { stream: true });
+          const parsed = parseFrames(buffer);
+          buffer = parsed.rest;
+          for (const frame of parsed.frames) {
+            if (frame.event === "snapshot") {
+              const card = takePending(frame.data.ticker);
+              if (card) fillSnapshot(card, frame.data);
+              finished += 1;
+              setStatus(frame.data.ticker + " is ready. " + finished + " of " + tickers.length + " finished.");
+            } else if (frame.event === "error") {
+              if (!frame.data.ticker) {
+                setBanner(frame.data.error || "The snapshot session failed.");
+                for (const card of cardsNode.querySelectorAll('.card[data-state="pending"]')) {
+                  fillRunError(card, { ticker: card.dataset.ticker, error: frame.data.error });
+                }
+              } else {
+                const card = takePending(frame.data.ticker);
+                if (card) fillRunError(card, frame.data);
+                finished += 1;
+                setStatus(frame.data.ticker + " failed. " + finished + " of " + tickers.length + " finished.");
+              }
+            } else if (frame.event === "done") {
+              const count = frame.data && typeof frame.data.count === "number" ? frame.data.count : finished;
+              setStatus("Finished. " + count + " snapshot" + (count === 1 ? "" : "s") + ".");
+            }
+          }
+        }
+        if (id !== runId) return;
+        const stillPending = cardsNode.querySelectorAll('.card[data-state="pending"]');
+        if (stillPending.length) {
+          setBanner("The stream closed before every ticker finished.");
+          for (const card of stillPending) {
+            fillRunError(card, { ticker: card.dataset.ticker, error: "No result arrived." });
+          }
+        }
+      } catch (err) {
+        if (id !== runId || err.name === "AbortError") return;
+        setBanner(err.message || "Could not read the snapshot stream.");
+        setStatus("");
+      } finally {
+        if (id === runId) submitButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

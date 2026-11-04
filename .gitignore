@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Secrets
+.env
+.env.*
+!.env.example
+KeySetup2.rtf
+
+# macOS
+.DS_Store
+
+# Generated index (rebuild with build_index.py)
+chroma_db/

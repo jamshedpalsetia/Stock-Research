@@ -1,0 +1,6 @@
+venv
+chroma_db
+.env
+.git
+**/__pycache__
+**/*.pyc
